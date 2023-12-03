@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DebugCodeGen": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\..\\sandbox\\ConsoleApp\\ConsoleApp.csproj"
+    }
+  }
+}
