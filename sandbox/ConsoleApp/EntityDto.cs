@@ -1,8 +1,8 @@
-﻿using IncrementalGenerator.Attributes;
+﻿using IncrementalGenerator.Abstractions;
 
 namespace ConsoleApp;
 
 [DtoFrom(typeof(Entity))]
-internal class EntityDto
+public sealed partial class EntityDto
 {
 }

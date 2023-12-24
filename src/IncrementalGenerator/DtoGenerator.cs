@@ -1,65 +1,186 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using IncrementalGenerator.Abstractions;
+using IncrementalGenerator.Extensions;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Scriban;
+using Microsoft.CodeAnalysis.Text;
+using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
-using System.Threading;
+using System.Reflection;
+using System.Text;
 
 namespace IncrementalGenerator;
 
 [Generator]
-public class BaseGenerator : IIncrementalGenerator
+public class DtoGenerator : IIncrementalGenerator
 {
+    private static string DtoFromAttribute = "IncrementalGenerator.Abstractions.DtoFromAttribute";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        //var provider = context.SyntaxProvider.CreateSyntaxProvider(
-        //    predicate: IsSyntaxTargetForGeneration,
-        //    transform: GetTargetForGeneration
-        //).Where(node => node is not null);
+        var classDeclarations = context.SyntaxProvider
+                .ForAttributeWithMetadataName(
+                    DtoFromAttribute,
+                    (node, _) => node is ClassDeclarationSyntax,
+                    (context, _) => context.TargetNode as ClassDeclarationSyntax)
+                .Where(static m => m is not null);
 
-        //var compilation = context.CompilationProvider.Combine(provider.Collect());
+        var compilationAndClasses = context.CompilationProvider.Combine(classDeclarations.Collect());
 
-        //context.RegisterSourceOutput(compilation, Execute);
+        context.RegisterSourceOutput(compilationAndClasses, static (spc, source) => Execute(source.Item1, source.Item2!, spc));
     }
 
-    private static bool IsSyntaxTargetForGeneration(SyntaxNode syntaxNode, CancellationToken token)
+    private static void Execute(Compilation compilation, ImmutableArray<ClassDeclarationSyntax> classes, SourceProductionContext context)
     {
-        return syntaxNode is ClassDeclarationSyntax classDeclarationSyntax &&
-            classDeclarationSyntax.AttributeLists.Count > 0 &&
-            classDeclarationSyntax.AttributeLists
-                .Any(al => al.Attributes
-                    .Any(a => a.Name.ToString() == "GenerateService"));
-    }
+        if (classes.IsDefaultOrEmpty)
+        {
+            // nothing to do yet
+            return;
+        }
 
-    private static ClassDeclarationSyntax GetTargetForGeneration(GeneratorSyntaxContext context, CancellationToken token)
-    {
-        return (ClassDeclarationSyntax)context.Node;
-    }
+        var distinctClasses = classes.Distinct();
 
-    private void Execute(SourceProductionContext context, (Compilation Left, ImmutableArray<ClassDeclarationSyntax> Right) tuple)
-    {
-        var (compilation, list) = tuple;
+        var dtoFromAttribute = compilation.GetBestTypeByMetadataName(DtoFromAttribute);
+        if (dtoFromAttribute == null)
+        {
+            // nothing to do if this type isn't available
+            return;
+        }
 
-        var names = string.Join(",\n", list.Select(node => $"\t\"{compilation
-            .GetSemanticModel(node.SyntaxTree)
-            .GetDeclaredSymbol(node)}\""));
+        // we enumerate by syntax tree, to minimize the need to instantiate semantic models (since they're expensive)
+        foreach (IGrouping<SyntaxTree, ClassDeclarationSyntax> group in classes.GroupBy(x => x.SyntaxTree))
+        {
+            var syntaxTree = group.Key;
+            var semanticModel = compilation.GetSemanticModel(syntaxTree);
 
-        // Parse a liquid template
-        var template = Template.ParseLiquid("Hello {{name}}!");
-        var result = template.Render(new { Name = "World" }); // => "Hello World!" 
-
-        var code = $$"""
-            namespace ClassListGenerator;
-
-            public static class ClassNames
+            foreach (ClassDeclarationSyntax classDec in group)
             {
-                public static List<string> Names = new() 
-                {
-                    {{names}}
-                };
-            }
-            """;
+                context.CancellationToken.ThrowIfCancellationRequested();
+                
+                var classSymbol = semanticModel.GetDeclaredSymbol(classDec, context.CancellationToken)!;
 
-        context.AddSource("ClassList.g.cs", code);
+                INamedTypeSymbol? entityType = null;
+
+                foreach (AttributeListSyntax classAttributeList in classDec.AttributeLists)
+                {
+                    foreach (AttributeSyntax classAttribute in classAttributeList.Attributes)
+                    {
+                        var attrCtorSymbol = semanticModel.GetSymbolInfo(classAttribute, context.CancellationToken).Symbol as IMethodSymbol;
+                        if (attrCtorSymbol == null || !dtoFromAttribute.Equals(attrCtorSymbol.ContainingType, SymbolEqualityComparer.Default))
+                        {
+                            // badly formed attribute definition, or not the right attribute
+                            continue;
+                        }
+
+                        var boundAttributes = classSymbol.GetAttributes();
+
+                        if (boundAttributes.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        foreach (AttributeData attributeData in boundAttributes)
+                        {
+                            if (!SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, dtoFromAttribute))
+                            {
+                                continue;
+                            }
+
+                            // supports: [DtoFrom(typeof(Entity))]
+                            if (attributeData.ConstructorArguments.Any())
+                            {
+                                ImmutableArray<TypedConstant> items = attributeData.ConstructorArguments;
+
+                                switch (items.Length)
+                                {
+                                    // DtoFrom(Type type)
+                                    case 1:
+                                        entityType =(INamedTypeSymbol)items[0].Value!;
+                                        break;
+
+                                    default:
+                                        Debug.Assert(false, "Unexpected number of arguments in attribute constructor.");
+                                        break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (entityType is not null)
+                {
+                    var hintName = $"{classDec.Identifier}.g.cs";
+                    var source = SourceText.From(StringifyClass(entityType, classDec.Identifier.ToString()), Encoding.UTF8);
+
+                    context.AddSource(hintName, source);
+                }
+            }
+        }
+    }
+
+    private static string StringifyClass(INamedTypeSymbol classType, string targetName)
+    {
+        var namespaceDeclaration = SyntaxFactory
+            .NamespaceDeclaration(SyntaxFactory.ParseName(classType.ContainingNamespace.Name))
+            .NormalizeWhitespace();
+
+        // Add System using statements
+        namespaceDeclaration = namespaceDeclaration.AddUsings(
+            SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")));
+        namespaceDeclaration = namespaceDeclaration.AddUsings(
+            SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Collections.Generic")));
+
+        //  Create a class
+        var classDeclaration = SyntaxFactory.ClassDeclaration(targetName);
+
+        // Add the "public sealed partial" modifiers
+        classDeclaration = classDeclaration.AddModifiers(
+            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
+            SyntaxFactory.Token(SyntaxKind.SealedKeyword),
+            SyntaxFactory.Token(SyntaxKind.PartialKeyword));
+
+        // Create a Properties
+        MemberDeclarationSyntax CreatePropertyDeclaration(IPropertySymbol propertySymbol)
+        {
+            return SyntaxFactory.PropertyDeclaration(AsTypeSyntax((INamedTypeSymbol)propertySymbol.Type), propertySymbol.Name)
+                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
+                .AddAccessorListAccessors(
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
+                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
+        }
+
+        MemberDeclarationSyntax[] propertyDeclarations = classType.GetMembers()
+            .OfType<IPropertySymbol>()
+            .Select(CreatePropertyDeclaration)
+            .ToArray();
+
+        // Add properties to the class.
+        classDeclaration = classDeclaration.AddMembers(propertyDeclarations);
+
+        // Add the class to the namespace.
+        namespaceDeclaration = namespaceDeclaration.AddMembers(classDeclaration);
+
+        return namespaceDeclaration
+            .NormalizeWhitespace()
+            .ToFullString();
+    }
+
+    public static TypeSyntax AsTypeSyntax(INamedTypeSymbol type)
+    {
+        if (type.IsGenericType is true)
+        {
+            return SyntaxFactory.GenericName(SyntaxFactory.Identifier(type.Name),
+                SyntaxFactory.TypeArgumentList(
+                    SyntaxFactory.SeparatedList(
+                        type.TypeArguments.Select(arg => AsTypeSyntax((INamedTypeSymbol)arg))
+                    )
+                )
+            );
+        }
+
+        return SyntaxFactory.ParseTypeName(type.Name);
     }
 }

@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sandbox", "sandbox", "{A831
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ConsoleApp", "sandbox\ConsoleApp\ConsoleApp.csproj", "{FF3663A8-B905-4C20-B176-0812CCE77545}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IncrementalGenerator.Abstractions", "src\IncrementalGenerator.Abstractions\IncrementalGenerator.Abstractions.csproj", "{4133C3D3-F356-469B-9A05-D66B4CDB45B6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{FF3663A8-B905-4C20-B176-0812CCE77545}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FF3663A8-B905-4C20-B176-0812CCE77545}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FF3663A8-B905-4C20-B176-0812CCE77545}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4133C3D3-F356-469B-9A05-D66B4CDB45B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4133C3D3-F356-469B-9A05-D66B4CDB45B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4133C3D3-F356-469B-9A05-D66B4CDB45B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4133C3D3-F356-469B-9A05-D66B4CDB45B6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -34,6 +40,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{6E5E59C3-2481-45A8-81EE-BEF6F2889761} = {D9D5A85D-A1DA-41D4-B75B-726C391DF7A2}
 		{FF3663A8-B905-4C20-B176-0812CCE77545} = {A831F747-5C79-4EFF-9741-3E93D415FC2C}
+		{4133C3D3-F356-469B-9A05-D66B4CDB45B6} = {D9D5A85D-A1DA-41D4-B75B-726C391DF7A2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4EE65916-E6BC-4A56-BA59-23C7BE58B14F}
