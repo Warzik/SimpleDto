@@ -1,4 +1,4 @@
-﻿using IncrementalGenerator.Abstractions;
+﻿using IncrementalGenerator.Attributes;
 
 namespace ConsoleApp;
 

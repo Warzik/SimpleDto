@@ -6,6 +6,5 @@ Console.WriteLine("Hello");
 
 var dto = new EntityDto
 {
-    Id = 1,
     Strings = new List<string>()
 };

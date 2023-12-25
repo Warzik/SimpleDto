@@ -1,15 +1,14 @@
-﻿using IncrementalGenerator.Abstractions;
+﻿using IncrementalGenerator.Common;
 using IncrementalGenerator.Extensions;
+using IncrementalGenerator.Templates.Attributes;
+using IncrementalGenerator.Templates.Classes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace IncrementalGenerator;
@@ -17,7 +16,7 @@ namespace IncrementalGenerator;
 [Generator]
 public class DtoGenerator : IIncrementalGenerator
 {
-    private static string DtoFromAttribute = "IncrementalGenerator.Abstractions.DtoFromAttribute";
+    private static string DtoFromAttribute = new DtoFromAttributeTemplate().AttributeFullName;
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -59,7 +58,7 @@ public class DtoGenerator : IIncrementalGenerator
             foreach (ClassDeclarationSyntax classDec in group)
             {
                 context.CancellationToken.ThrowIfCancellationRequested();
-                
+
                 var classSymbol = semanticModel.GetDeclaredSymbol(classDec, context.CancellationToken)!;
 
                 INamedTypeSymbol? entityType = null;
@@ -98,7 +97,7 @@ public class DtoGenerator : IIncrementalGenerator
                                 {
                                     // DtoFrom(Type type)
                                     case 1:
-                                        entityType =(INamedTypeSymbol)items[0].Value!;
+                                        entityType = (INamedTypeSymbol)items[0].Value!;
                                         break;
 
                                     default:
@@ -112,75 +111,13 @@ public class DtoGenerator : IIncrementalGenerator
 
                 if (entityType is not null)
                 {
+                    var template = new DtoClassTemplate(classDec, entityType);
                     var hintName = $"{classDec.Identifier}.g.cs";
-                    var source = SourceText.From(StringifyClass(entityType, classDec.Identifier.ToString()), Encoding.UTF8);
+                    var source = SourceText.From(ScribanRenderer.Render(template), Encoding.UTF8);
 
                     context.AddSource(hintName, source);
                 }
             }
         }
-    }
-
-    private static string StringifyClass(INamedTypeSymbol classType, string targetName)
-    {
-        var namespaceDeclaration = SyntaxFactory
-            .NamespaceDeclaration(SyntaxFactory.ParseName(classType.ContainingNamespace.Name))
-            .NormalizeWhitespace();
-
-        // Add System using statements
-        namespaceDeclaration = namespaceDeclaration.AddUsings(
-            SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System")));
-        namespaceDeclaration = namespaceDeclaration.AddUsings(
-            SyntaxFactory.UsingDirective(SyntaxFactory.ParseName("System.Collections.Generic")));
-
-        //  Create a class
-        var classDeclaration = SyntaxFactory.ClassDeclaration(targetName);
-
-        // Add the "public sealed partial" modifiers
-        classDeclaration = classDeclaration.AddModifiers(
-            SyntaxFactory.Token(SyntaxKind.PublicKeyword),
-            SyntaxFactory.Token(SyntaxKind.SealedKeyword),
-            SyntaxFactory.Token(SyntaxKind.PartialKeyword));
-
-        // Create a Properties
-        MemberDeclarationSyntax CreatePropertyDeclaration(IPropertySymbol propertySymbol)
-        {
-            return SyntaxFactory.PropertyDeclaration(AsTypeSyntax((INamedTypeSymbol)propertySymbol.Type), propertySymbol.Name)
-                .AddModifiers(SyntaxFactory.Token(SyntaxKind.PublicKeyword))
-                .AddAccessorListAccessors(
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)),
-                    SyntaxFactory.AccessorDeclaration(SyntaxKind.SetAccessorDeclaration).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken)));
-        }
-
-        MemberDeclarationSyntax[] propertyDeclarations = classType.GetMembers()
-            .OfType<IPropertySymbol>()
-            .Select(CreatePropertyDeclaration)
-            .ToArray();
-
-        // Add properties to the class.
-        classDeclaration = classDeclaration.AddMembers(propertyDeclarations);
-
-        // Add the class to the namespace.
-        namespaceDeclaration = namespaceDeclaration.AddMembers(classDeclaration);
-
-        return namespaceDeclaration
-            .NormalizeWhitespace()
-            .ToFullString();
-    }
-
-    public static TypeSyntax AsTypeSyntax(INamedTypeSymbol type)
-    {
-        if (type.IsGenericType is true)
-        {
-            return SyntaxFactory.GenericName(SyntaxFactory.Identifier(type.Name),
-                SyntaxFactory.TypeArgumentList(
-                    SyntaxFactory.SeparatedList(
-                        type.TypeArguments.Select(arg => AsTypeSyntax((INamedTypeSymbol)arg))
-                    )
-                )
-            );
-        }
-
-        return SyntaxFactory.ParseTypeName(type.Name);
     }
 }

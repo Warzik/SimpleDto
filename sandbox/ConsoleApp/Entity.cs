@@ -1,7 +1,8 @@
-﻿namespace ConsoleApp;
-internal class Entity
+﻿using System.Collections.Generic;
+
+namespace ConsoleApp;
+
+internal sealed class Entity : BaseEntity
 {
-    public int Id { get; set; }
-    public string? Description  { get; set; }
     public List<string>? Strings  { get; set; }
 }
