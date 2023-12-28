@@ -14,7 +14,8 @@ namespace IncrementalGenerator;
 internal sealed class AttributesGenerator : IIncrementalGenerator
 {
     private readonly BaseAttributeTemplate[] AllAttributes = [
-        new DtoFromAttributeTemplate()
+        new DtoFromAttributeTemplate(),
+        new DtoMemberIgnoreAttributeTemplate()
     ];
 
     public void Initialize(IncrementalGeneratorInitializationContext context)

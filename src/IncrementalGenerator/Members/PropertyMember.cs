@@ -8,9 +8,9 @@ using System.Text;
 
 namespace IncrementalGenerator.Descriptors;
 
-internal sealed class PropertyDescriptor
+internal sealed class PropertyMember
 {
-    public PropertyDescriptor(IPropertySymbol propertySymbol)
+    public PropertyMember(IPropertySymbol propertySymbol)
     {
         Name = propertySymbol.Name.ToString();
         Type = propertySymbol.Type.ToString();

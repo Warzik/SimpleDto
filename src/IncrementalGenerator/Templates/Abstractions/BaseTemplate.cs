@@ -3,6 +3,7 @@ using System;
 using System.Reflection;
 using System.Collections.Generic;
 using Scriban.Runtime;
+using Microsoft.CodeAnalysis;
 
 namespace IncrementalGenerator.Templates.Abstractions;
 

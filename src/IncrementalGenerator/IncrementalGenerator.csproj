@@ -25,4 +25,8 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</EmbeddedResource>
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Templates\Attributes\DtoMemberIgnoreAttributeTemplate.cs.sbncs" />
+	</ItemGroup>
 </Project>
