@@ -58,17 +58,14 @@ internal sealed class SimplePropertiesResolver : BasePropertiesResolver
     {
         foreach (var ignored in ignoredTypes)
         {
-            if (ignored is INamedTypeSymbol namedOpenType &&
-               namedOpenType.IsGenericType &&
-               namedOpenType.IsUnboundGenericType &&
-               type is INamedTypeSymbol namedClosedType &&
-               namedClosedType.IsGenericType)
+            if (IsTypeIgnored(type, ignored))
             {
-                // Check if the closed type is the same as the open type definition.
-                return IsTypeIgnored(type.OriginalDefinition, ignored.OriginalDefinition);
+                return true;
             }
 
-            if (IsTypeIgnored(type, ignored))
+            if (ignored is INamedTypeSymbol ignoredOpenType && ignoredOpenType.IsGenericType && ignoredOpenType.IsUnboundGenericType &&
+              type is INamedTypeSymbol closedType && closedType.IsGenericType &&
+              IsTypeIgnored(type, ignored.OriginalDefinition))
             {
                 return true;
             }
