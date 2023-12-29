@@ -7,9 +7,9 @@ namespace IncrementalGenerator.Common;
 
 public static class DiagnosticDescriptors
 {
-    public static DiagnosticDescriptor PropertyInconsistentAccessibility { get; } = new DiagnosticDescriptor(
+    public static DiagnosticDescriptor PropertyTypeInconsistentAccessibility { get; } = new DiagnosticDescriptor(
         "SD1001",
-        "Inconsistent accessibility.",
+        "Property type inconsistent accessibility.",
         "Property type '{0}' is less accessible than property '{1}'.",
         DiagnosticCategories.SimpleDto,
         DiagnosticSeverity.Warning,

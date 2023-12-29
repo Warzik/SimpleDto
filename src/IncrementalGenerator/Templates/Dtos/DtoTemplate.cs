@@ -1,5 +1,6 @@
 ﻿using IncrementalGenerator.Descriptors;
 using IncrementalGenerator.Parsers;
+using IncrementalGenerator.Strategies.Abstractions;
 using IncrementalGenerator.Templates.Abstractions;
 using Microsoft.CodeAnalysis;
 using System;
@@ -9,14 +10,14 @@ namespace IncrementalGenerator.Templates.Classes;
 
 internal sealed class DtoTemplate : BaseDtoTemplate
 {
-    public DtoTemplate(DtoClass dtoClass, Action<Diagnostic> reportDiagnostic) : base(reportDiagnostic)
+    public DtoTemplate(DtoTypeDescriptor dtoClass, IPropertiesResolver propertiesResolver)
     {
         TemplateFileName = "DtoTemplate.cs.sbncs";
+        Namespace = GetNamespaceFrom(dtoClass.DtoSyntax);
 
         Name = dtoClass.DtoSyntax.Identifier.ToString();
 
-        Properties = GetProperties(dtoClass.EntitySymbol)
-            .Where(x => !dtoClass.IgnoredProperties.Contains(x.Name))
+        Properties = propertiesResolver.ExtractProperties(dtoClass)
             .ToArray();
 
         TypeModifiers = dtoClass.DtoSyntax.Modifiers
@@ -24,15 +25,13 @@ internal sealed class DtoTemplate : BaseDtoTemplate
             .ToArray();
 
         IsRecord = dtoClass.DtoSymbol.IsRecord;
-
-        Namespace = GetNamespaceFrom(dtoClass.DtoSyntax);
     }
 
-    public override string Name { get; }
-    public override PropertyMember[] Properties { get; }
-    public override string[] TypeModifiers { get; }
-    public override string Namespace { get; }
-    public override bool IsRecord { get; }
+    public string Name { get; }
+    public PropertyMember[] Properties { get; }
+    public string[] TypeModifiers { get; }
+    public bool IsRecord { get; }
 
+    public override string Namespace { get; }
     protected override string TemplateFileName { get; }
 }

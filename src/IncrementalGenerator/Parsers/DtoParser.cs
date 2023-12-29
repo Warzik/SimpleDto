@@ -32,7 +32,7 @@ internal class DtoParser
         _reportDiagnostic = reportDiagnostic;
     }
 
-    public IEnumerable<DtoClass> GetDtoTypes(IEnumerable<TypeDeclarationSyntax> classes)
+    public IEnumerable<DtoTypeDescriptor> GetDtoTypes(IEnumerable<TypeDeclarationSyntax> classes)
     {
         var dtoFromAttribute = _compilation.GetBestTypeByMetadataName(DtoFromAttribute);
         if (dtoFromAttribute == null)
@@ -62,6 +62,7 @@ internal class DtoParser
                
                 INamedTypeSymbol? entitySymbol = null;
                 List<string> ignoredProperties = new();
+                List<ITypeSymbol> ignoredTypes = new();
 
                 foreach (AttributeListSyntax classAttributeList in classDeclaration.AttributeLists)
                 {
@@ -82,13 +83,22 @@ internal class DtoParser
                         }
 
                         entitySymbol = GetEntity(boundAttributes, dtoFromAttribute);
-                        ignoredProperties.AddRange(GetIgnoredProperties(boundAttributes, dtoIgnoreAttribute));
+                        PopulateIgnoredProperties(
+                            ignoredProperties,
+                            ignoredTypes,
+                            boundAttributes, 
+                            dtoIgnoreAttribute);
                     }
                 }
 
                 if(entitySymbol is not null)
                 {
-                    yield return new DtoClass(entitySymbol, classDeclaration, classSymbol, ignoredProperties);
+                    yield return new DtoTypeDescriptor(
+                        entitySymbol, 
+                        classDeclaration, 
+                        classSymbol, 
+                        ignoredProperties,
+                        ignoredTypes);
                 }
             }
         }
@@ -122,7 +132,11 @@ internal class DtoParser
         return null;
     }
 
-    private static IEnumerable<string> GetIgnoredProperties(ImmutableArray<AttributeData> boundAttributes, INamedTypeSymbol dtoIgnoreAttribute)
+    private static void PopulateIgnoredProperties(
+        ICollection<string> ignoredProperties,
+        ICollection<ITypeSymbol> ignoredTypes,
+        ImmutableArray<AttributeData> boundAttributes, 
+        INamedTypeSymbol dtoIgnoreAttribute)
     {
         foreach (AttributeData attributeData in boundAttributes)
         {
@@ -132,15 +146,21 @@ internal class DtoParser
             }
 
             // supports: [DtoMemberIgnore("Name")]
+            // supports: [DtoMemberIgnore(typeof(string))]
             if (attributeData.ConstructorArguments.Any())
             {
                 switch (attributeData.ConstructorArguments.Length)
                 {
                     // DtoMemberIgnore(string propertyName)
+                    // DtoMemberIgnore(Type propertyType)
                     case 1:
                         if(attributeData.ConstructorArguments[0].Value is string stringValue)
                         {
-                            yield return stringValue;
+                            ignoredProperties.Add(stringValue);
+                        }  
+                        else if(attributeData.ConstructorArguments[0].Value is ITypeSymbol type)
+                        {
+                            ignoredTypes.Add(type);
                         } 
                         break;
 
@@ -153,22 +173,25 @@ internal class DtoParser
     }
 }
 
-public class DtoClass
+public class DtoTypeDescriptor
 {
-    public DtoClass(
+    public DtoTypeDescriptor(
         INamedTypeSymbol entity,
         TypeDeclarationSyntax dtoSyntax,
         INamedTypeSymbol dtoSymbol,
-        List<string> ignoredProperties)
+        List<string> ignoredProperties,
+        List<ITypeSymbol> ignoredTypes)
     {
         EntitySymbol = entity;
         DtoSyntax = dtoSyntax;
         DtoSymbol = dtoSymbol;
         IgnoredProperties = ignoredProperties;
+        IgnoredTypes = ignoredTypes;
     }
 
     public TypeDeclarationSyntax DtoSyntax { get; set; }
     public INamedTypeSymbol DtoSymbol { get; set; }
     public INamedTypeSymbol EntitySymbol { get; }
     public List<string> IgnoredProperties { get; }
+    public List<ITypeSymbol> IgnoredTypes { get; }
 }

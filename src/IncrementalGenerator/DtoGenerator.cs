@@ -1,6 +1,7 @@
 ﻿using IncrementalGenerator.Common;
 using IncrementalGenerator.Extensions;
 using IncrementalGenerator.Parsers;
+using IncrementalGenerator.Resolvers;
 using IncrementalGenerator.Templates.Attributes;
 using IncrementalGenerator.Templates.Classes;
 using Microsoft.CodeAnalysis;
@@ -42,14 +43,14 @@ public class DtoGenerator : IIncrementalGenerator
         var distinctTypes = types.Distinct();
 
         var parser = new DtoParser(compilation, context.ReportDiagnostic, context.CancellationToken);
+        var propertiesResolver = new SimplePropertiesResolver(context.ReportDiagnostic, context.CancellationToken);
 
         foreach (var dtoClass in parser.GetDtoTypes(distinctTypes))
         {
-            var template = new DtoTemplate(dtoClass, context.ReportDiagnostic);
-            var hintName = $"{dtoClass.DtoSyntax.Identifier}.g.cs";
+            var template = new DtoTemplate(dtoClass, propertiesResolver);
             var source = SourceText.From(ScribanRenderer.Render(template), Encoding.UTF8);
 
-            context.AddSource(hintName, source);
+            context.AddSource($"{dtoClass.DtoSyntax.Identifier}.g.cs", source);
         }
     }
 }
