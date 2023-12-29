@@ -3,6 +3,7 @@ using IncrementalGenerator.Descriptors;
 using IncrementalGenerator.Parsers;
 using IncrementalGenerator.Resolvers.Abstractions;
 using Microsoft.CodeAnalysis;
+using Scriban.Parsing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,9 +58,14 @@ internal sealed class SimplePropertiesResolver : BasePropertiesResolver
     {
         foreach (var ignored in ignoredTypes)
         {
-            if (IsOpenGenericCompatible(type, ignored))
+            if (ignored is INamedTypeSymbol namedOpenType &&
+               namedOpenType.IsGenericType &&
+               namedOpenType.IsUnboundGenericType &&
+               type is INamedTypeSymbol namedClosedType &&
+               namedClosedType.IsGenericType)
             {
-                return true;
+                // Check if the closed type is the same as the open type definition.
+                return IsTypeIgnored(type.OriginalDefinition, ignored.OriginalDefinition);
             }
 
             if (IsTypeIgnored(type, ignored))
@@ -70,33 +76,20 @@ internal sealed class SimplePropertiesResolver : BasePropertiesResolver
 
         return false;
 
-        static bool IsOpenGenericCompatible(ITypeSymbol closedType, ITypeSymbol openType)
-        {
-            if (openType is INamedTypeSymbol namedOpenType &&
-                namedOpenType.IsGenericType &&
-                namedOpenType.IsUnboundGenericType &&
-                closedType is INamedTypeSymbol namedClosedType &&
-                namedClosedType.IsGenericType)
-            {
-                // Check if the closed type is the same as the open type definition.
-                return IsTypeIgnored(closedType.OriginalDefinition, openType.OriginalDefinition);
-            }
-
-            return false;
-        }
-
         static bool IsTypeIgnored(ITypeSymbol type, ITypeSymbol ignoredType)
         {
-            if (SymbolEqualityComparer.Default.Equals(type, ignoredType))
+            if (SymbolEqualityComparer.Default.Equals(type, ignoredType) ||
+                SymbolEqualityComparer.Default.Equals(type.OriginalDefinition, ignoredType))
             {
                 return true;
             }
 
-            if (type.AllInterfaces.Any(i => 
-                SymbolEqualityComparer.Default.Equals(i, ignoredType) ||
-                SymbolEqualityComparer.Default.Equals(i.OriginalDefinition, ignoredType)))
+            foreach (var interfaceType in type.AllInterfaces)
             {
-                return true;
+                if (IsTypeIgnored(interfaceType, ignoredType))
+                {
+                    return true;
+                }
             }
 
             if (type.BaseType is { SpecialType: not SpecialType.System_Object })
