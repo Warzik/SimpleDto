@@ -1,6 +1,6 @@
 ﻿namespace ConsoleApp;
 
-public enum CustomEnum
+internal enum CustomEnum
 {
     None = 0,
     Something = 1

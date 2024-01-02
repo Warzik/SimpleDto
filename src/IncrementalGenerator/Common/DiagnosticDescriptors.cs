@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace IncrementalGenerator.Common;
+namespace SimpleDto.Generator.Common;
 
 public static class DiagnosticDescriptors
 {

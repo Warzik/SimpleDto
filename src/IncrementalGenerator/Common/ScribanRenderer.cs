@@ -3,9 +3,9 @@ using Scriban;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using IncrementalGenerator.Templates.Abstractions;
+using SimpleDto.Generator.Templates.Abstractions;
 
-namespace IncrementalGenerator.Common;
+namespace SimpleDto.Generator.Common;
 internal sealed class ScribanRenderer
 {
     public static string Render(BaseTemplate template)

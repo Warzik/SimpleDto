@@ -1,13 +1,9 @@
-﻿using IncrementalGenerator.Common;
-using IncrementalGenerator.Descriptors;
-using IncrementalGenerator.Parsers;
-using IncrementalGenerator.Strategies.Abstractions;
-using Microsoft.CodeAnalysis;
-using System;
+﻿using Microsoft.CodeAnalysis;
+using SimpleDto.Generator.Members;
+using SimpleDto.Generator.Parsers;
 using System.Collections.Generic;
-using System.Text;
 
-namespace IncrementalGenerator.Resolvers.Abstractions;
+namespace SimpleDto.Generator.Resolvers.Abstractions;
 internal abstract class BasePropertiesResolver : IPropertiesResolver
 {
     public abstract IEnumerable<PropertyMember> ExtractProperties(DtoTypeDescriptor typeDescriptor);

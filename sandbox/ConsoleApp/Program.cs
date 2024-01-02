@@ -9,9 +9,3 @@ Console.WriteLine("Hello");
 var dto = new EntityDto
 {
 };
-
-
-var dtoRecord = new EntityRecordDto
-{
-
-};

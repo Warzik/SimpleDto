@@ -1,12 +1,12 @@
-﻿using IncrementalGenerator.Descriptors;
-using IncrementalGenerator.Parsers;
-using IncrementalGenerator.Strategies.Abstractions;
-using IncrementalGenerator.Templates.Abstractions;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
+using SimpleDto.Generator.Members;
+using SimpleDto.Generator.Parsers;
+using SimpleDto.Generator.Resolvers.Abstractions;
+using SimpleDto.Generator.Templates.Abstractions;
 using System;
 using System.Linq;
 
-namespace IncrementalGenerator.Templates.Classes;
+namespace SimpleDto.Generator.Templates.Dtos;
 
 internal sealed class DtoTemplate : BaseDtoTemplate
 {

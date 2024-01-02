@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using Scriban.Runtime;
 using Microsoft.CodeAnalysis;
 
-namespace IncrementalGenerator.Templates.Abstractions;
+namespace SimpleDto.Generator.Templates.Abstractions;
 
 internal abstract class BaseTemplate
 {

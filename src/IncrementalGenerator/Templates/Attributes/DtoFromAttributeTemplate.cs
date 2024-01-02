@@ -1,8 +1,8 @@
-﻿using IncrementalGenerator.Common;
-using IncrementalGenerator.Templates.Abstractions;
+﻿using SimpleDto.Generator.Common;
+using SimpleDto.Generator.Templates.Abstractions;
 using System;
 
-namespace IncrementalGenerator.Templates.Attributes;
+namespace SimpleDto.Generator.Templates.Attributes;
 
 internal sealed class DtoFromAttributeTemplate : BaseAttributeTemplate
 {

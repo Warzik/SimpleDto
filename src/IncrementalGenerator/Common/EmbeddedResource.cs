@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 
-namespace IncrementalGenerator.Common;
+namespace SimpleDto.Generator.Common;
 
 internal static class EmbeddedResource
 {

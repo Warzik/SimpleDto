@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace IncrementalGenerator.Common;
+namespace SimpleDto.Generator.Common;
+
 internal static class Constants
 {
-    public const string AttributesNamespace = "IncrementalGenerator.Attributes";
+    public const string AttributesNamespace = "SimpleDto.Generator.Attributes";
 }

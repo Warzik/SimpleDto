@@ -1,14 +1,11 @@
-﻿using IncrementalGenerator.Common;
-using IncrementalGenerator.Templates;
-using IncrementalGenerator.Templates.Abstractions;
-using IncrementalGenerator.Templates.Attributes;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Scriban;
-using Scriban.Runtime;
+using SimpleDto.Generator.Common;
+using SimpleDto.Generator.Templates.Abstractions;
+using SimpleDto.Generator.Templates.Attributes;
 using System.Text;
 
-namespace IncrementalGenerator;
+namespace SimpleDto.Generator;
 
 [Generator]
 internal sealed class AttributesGenerator : IIncrementalGenerator

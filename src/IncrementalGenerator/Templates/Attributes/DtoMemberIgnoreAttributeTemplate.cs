@@ -1,10 +1,10 @@
-﻿using IncrementalGenerator.Common;
-using IncrementalGenerator.Templates.Abstractions;
+﻿using SimpleDto.Generator.Common;
+using SimpleDto.Generator.Templates.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace IncrementalGenerator.Templates.Attributes;
+namespace SimpleDto.Generator.Templates.Attributes;
 
 internal sealed class DtoMemberIgnoreAttributeTemplate : BaseAttributeTemplate
 {

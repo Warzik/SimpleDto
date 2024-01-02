@@ -1,4 +1,4 @@
-﻿using IncrementalGenerator.Attributes;
+﻿using SimpleDto.Generator.Attributes;
 
 namespace ConsoleApp;
 

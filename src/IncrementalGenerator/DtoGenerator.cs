@@ -1,19 +1,16 @@
-﻿using IncrementalGenerator.Common;
-using IncrementalGenerator.Extensions;
-using IncrementalGenerator.Parsers;
-using IncrementalGenerator.Resolvers;
-using IncrementalGenerator.Templates.Attributes;
-using IncrementalGenerator.Templates.Classes;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using SimpleDto.Generator.Common;
+using SimpleDto.Generator.Parsers;
+using SimpleDto.Generator.Resolvers;
+using SimpleDto.Generator.Templates.Attributes;
+using SimpleDto.Generator.Templates.Dtos;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
-namespace IncrementalGenerator;
+namespace SimpleDto.Generator;
 
 [Generator]
 public class DtoGenerator : IIncrementalGenerator
@@ -23,8 +20,8 @@ public class DtoGenerator : IIncrementalGenerator
         var classDeclarations = context.SyntaxProvider
                 .ForAttributeWithMetadataName(
                     new DtoFromAttributeTemplate().AttributeFullName,
-                    (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
-                    (context, _) => context.TargetNode as TypeDeclarationSyntax)
+                    static (node, _) => node is ClassDeclarationSyntax or RecordDeclarationSyntax,
+                    static (context, _) => context.TargetNode as TypeDeclarationSyntax)
                 .Where(static m => m is not null);
 
         var compilationAndClasses = context.CompilationProvider.Combine(classDeclarations.Collect());
@@ -43,7 +40,7 @@ public class DtoGenerator : IIncrementalGenerator
         var distinctTypes = types.Distinct();
 
         var parser = new DtoParser(compilation, context.ReportDiagnostic, context.CancellationToken);
-        var propertiesResolver = new SimplePropertiesResolver(context.ReportDiagnostic, context.CancellationToken);
+        var propertiesResolver = new SimplePropertiesResolver(compilation, context.ReportDiagnostic, context.CancellationToken);
 
         foreach (var dtoClass in parser.GetDtoTypes(distinctTypes))
         {

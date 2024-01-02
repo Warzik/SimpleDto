@@ -1,20 +1,15 @@
-﻿using IncrementalGenerator.Common;
-using IncrementalGenerator.Descriptors;
-using IncrementalGenerator.Extensions;
-using IncrementalGenerator.Templates.Attributes;
-using IncrementalGenerator.Templates.Classes;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
+using SimpleDto.Generator.Extensions;
+using SimpleDto.Generator.Templates.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 
-namespace IncrementalGenerator.Parsers;
+namespace SimpleDto.Generator.Parsers;
 
 internal class DtoParser
 {
@@ -49,24 +44,24 @@ internal class DtoParser
         }
 
         // we enumerate by syntax tree, to minimize the need to instantiate semantic models (since they're expensive)
-        foreach (IGrouping<SyntaxTree, TypeDeclarationSyntax> group in classes.GroupBy(x => x.SyntaxTree))
+        foreach (var group in classes.GroupBy(x => x.SyntaxTree))
         {
             var syntaxTree = group.Key;
             var semanticModel = _compilation.GetSemanticModel(syntaxTree);
 
-            foreach (TypeDeclarationSyntax classDeclaration in group)
+            foreach (var classDeclaration in group)
             {
                 _cancellationToken.ThrowIfCancellationRequested();
 
-                INamedTypeSymbol classSymbol = (INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDeclaration, _cancellationToken)!;
-               
+                var classSymbol = (INamedTypeSymbol)semanticModel.GetDeclaredSymbol(classDeclaration, _cancellationToken)!;
+
                 INamedTypeSymbol? entitySymbol = null;
                 List<string> ignoredProperties = new();
                 List<ITypeSymbol> ignoredTypes = new();
 
-                foreach (AttributeListSyntax classAttributeList in classDeclaration.AttributeLists)
+                foreach (var classAttributeList in classDeclaration.AttributeLists)
                 {
-                    foreach (AttributeSyntax classAttribute in classAttributeList.Attributes)
+                    foreach (var classAttribute in classAttributeList.Attributes)
                     {
                         var attributeCtorSymbol = semanticModel.GetSymbolInfo(classAttribute, _cancellationToken).Symbol as IMethodSymbol;
                         if (attributeCtorSymbol == null || !dtoFromAttribute.Equals(attributeCtorSymbol.ContainingType, SymbolEqualityComparer.Default))
@@ -86,17 +81,17 @@ internal class DtoParser
                         PopulateIgnoredProperties(
                             ignoredProperties,
                             ignoredTypes,
-                            boundAttributes, 
+                            boundAttributes,
                             dtoIgnoreAttribute);
                     }
                 }
 
-                if(entitySymbol is not null)
+                if (entitySymbol is not null)
                 {
                     yield return new DtoTypeDescriptor(
-                        entitySymbol, 
-                        classDeclaration, 
-                        classSymbol, 
+                        entitySymbol,
+                        classDeclaration,
+                        classSymbol,
                         ignoredProperties,
                         ignoredTypes);
                 }
@@ -106,7 +101,7 @@ internal class DtoParser
 
     private static INamedTypeSymbol? GetEntity(ImmutableArray<AttributeData> boundAttributes, INamedTypeSymbol dtoFromAttribute)
     {
-        foreach (AttributeData attributeData in boundAttributes)
+        foreach (var attributeData in boundAttributes)
         {
             if (!SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, dtoFromAttribute))
             {
@@ -135,10 +130,10 @@ internal class DtoParser
     private static void PopulateIgnoredProperties(
         ICollection<string> ignoredProperties,
         ICollection<ITypeSymbol> ignoredTypes,
-        ImmutableArray<AttributeData> boundAttributes, 
+        ImmutableArray<AttributeData> boundAttributes,
         INamedTypeSymbol dtoIgnoreAttribute)
     {
-        foreach (AttributeData attributeData in boundAttributes)
+        foreach (var attributeData in boundAttributes)
         {
             if (!SymbolEqualityComparer.Default.Equals(attributeData.AttributeClass, dtoIgnoreAttribute))
             {
@@ -154,14 +149,14 @@ internal class DtoParser
                     // DtoMemberIgnore(string propertyName)
                     // DtoMemberIgnore(Type propertyType)
                     case 1:
-                        if(attributeData.ConstructorArguments[0].Value is string stringValue)
+                        if (attributeData.ConstructorArguments[0].Value is string stringValue)
                         {
                             ignoredProperties.Add(stringValue);
-                        }  
-                        else if(attributeData.ConstructorArguments[0].Value is ITypeSymbol type)
+                        }
+                        else if (attributeData.ConstructorArguments[0].Value is ITypeSymbol type)
                         {
                             ignoredTypes.Add(type);
-                        } 
+                        }
                         break;
 
                     default:

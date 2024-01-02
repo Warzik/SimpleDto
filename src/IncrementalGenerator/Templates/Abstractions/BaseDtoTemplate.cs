@@ -1,13 +1,8 @@
-﻿using IncrementalGenerator.Common;
-using IncrementalGenerator.Descriptors;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
 
-namespace IncrementalGenerator.Templates.Abstractions;
+namespace SimpleDto.Generator.Templates.Abstractions;
 
 internal abstract class BaseDtoTemplate : BaseTemplate
 {

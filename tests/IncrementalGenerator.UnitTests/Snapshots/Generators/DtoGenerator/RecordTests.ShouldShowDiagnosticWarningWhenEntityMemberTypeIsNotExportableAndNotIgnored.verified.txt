@@ -1,0 +1,14 @@
+﻿{
+  Diagnostics: [
+    {
+      Id: SD1001,
+      Title: Property type inconsistent accessibility.,
+      Severity: Warning,
+      WarningLevel: 1,
+      Location: : (13,29)-(13,41),
+      MessageFormat: Property type '{0}' is less accessible than property '{1}'.,
+      Message: Property type 'Application.Entities.InternalEnum?' is less accessible than property 'Application.Entities.Entity.InternalEnum'.,
+      Category: SimpleDto
+    }
+  ]
+}

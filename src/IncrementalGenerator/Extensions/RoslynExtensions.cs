@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
 
-namespace IncrementalGenerator.Extensions;
+namespace SimpleDto.Generator.Extensions;
 internal static class RoslynExtensions
 {
     // Copied from: https://github.com/dotnet/roslyn/blob/main/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Extensions/CompilationExtensions.cs
@@ -87,13 +87,13 @@ internal static class RoslynExtensions
     public static INamedTypeSymbol? GetBestTypeByMetadataName(this Compilation compilation, Type type) =>
         type.IsArray || type.FullName is null
             ? throw new ArgumentException("The input type must correspond to a named type symbol.")
-            : GetBestTypeByMetadataName(compilation, type.FullName);
+            : compilation.GetBestTypeByMetadataName(type.FullName);
 
     // copied from https://github.com/dotnet/roslyn/blob/main/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Extensions/ISymbolExtensions.cs
     private static SymbolVisibility GetResultantVisibility(this ISymbol symbol)
     {
         // Start by assuming it's visible.
-        SymbolVisibility visibility = SymbolVisibility.Public;
+        var visibility = SymbolVisibility.Public;
 
         switch (symbol.Kind)
         {
@@ -104,7 +104,7 @@ internal static class RoslynExtensions
 
             case SymbolKind.Parameter:
                 // Parameters are only as visible as their containing symbol
-                return GetResultantVisibility(symbol.ContainingSymbol);
+                return symbol.ContainingSymbol.GetResultantVisibility();
 
             case SymbolKind.TypeParameter:
                 // Type Parameters are private.

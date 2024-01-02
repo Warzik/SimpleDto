@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IncrementalGenerator.Templates.Abstractions;
+namespace SimpleDto.Generator.Templates.Abstractions;
 
 internal abstract class BaseAttributeTemplate : BaseTemplate
 {

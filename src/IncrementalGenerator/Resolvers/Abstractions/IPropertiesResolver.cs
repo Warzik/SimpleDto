@@ -1,10 +1,10 @@
-﻿using IncrementalGenerator.Descriptors;
-using IncrementalGenerator.Parsers;
+﻿using SimpleDto.Generator.Members;
+using SimpleDto.Generator.Parsers;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace IncrementalGenerator.Strategies.Abstractions;
+namespace SimpleDto.Generator.Resolvers.Abstractions;
 
 internal interface IPropertiesResolver
 {

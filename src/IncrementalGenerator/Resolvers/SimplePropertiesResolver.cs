@@ -1,32 +1,36 @@
-﻿using IncrementalGenerator.Common;
-using IncrementalGenerator.Descriptors;
-using IncrementalGenerator.Parsers;
-using IncrementalGenerator.Resolvers.Abstractions;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Scriban.Parsing;
+using SimpleDto.Generator.Common;
+using SimpleDto.Generator.Extensions;
+using SimpleDto.Generator.Members;
+using SimpleDto.Generator.Parsers;
+using SimpleDto.Generator.Resolvers.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace IncrementalGenerator.Resolvers;
+namespace SimpleDto.Generator.Resolvers;
 
 internal sealed class SimplePropertiesResolver : BasePropertiesResolver
 {
+    private readonly Compilation _compilation;
     private readonly Action<Diagnostic> _reportDiagnostic;
     private readonly CancellationToken _cancellationToken;
 
     public SimplePropertiesResolver(
+        Compilation compilation,
         Action<Diagnostic> reportDiagnostic,
         CancellationToken cancellationToken)
     {
+        _compilation = compilation;
         _reportDiagnostic = reportDiagnostic;
         _cancellationToken = cancellationToken;
     }
 
     public override IEnumerable<PropertyMember> ExtractProperties(DtoTypeDescriptor typeDescriptor)
     {
-        foreach (var property in base.ExtractAll(typeDescriptor.EntitySymbol))
+        foreach (var property in ExtractAll(typeDescriptor.EntitySymbol))
         {
             _cancellationToken.ThrowIfCancellationRequested();
 
@@ -40,16 +44,16 @@ internal sealed class SimplePropertiesResolver : BasePropertiesResolver
                 continue;
             }
 
-            if (IsTypeExportable(property.Type))
+            if (property.Type.IsExportable())
             {
                 yield return new PropertyMember(property);
             }
             else
             {
-                _reportDiagnostic((Diagnostic.Create(
+                _reportDiagnostic(Diagnostic.Create(
                  DiagnosticDescriptors.PropertyTypeInconsistentAccessibility,
                  property.Locations.FirstOrDefault(),
-                 property.Type, property)));
+                 property.Type, property));
             }
         }
     }
@@ -106,33 +110,6 @@ internal sealed class SimplePropertiesResolver : BasePropertiesResolver
             {
                 return true;
             }
-        }
-
-        return false;
-    }
-
-    private static bool IsTypeExportable(ITypeSymbol typeSymbol)
-    {
-        if (typeSymbol is not INamedTypeSymbol namedTypeSymbol)
-        {
-            return false;
-        }
-
-        if (namedTypeSymbol.IsGenericType)
-        {
-            // Check if all generic arguments are exportable
-            foreach (var typeArgument in namedTypeSymbol.TypeArguments)
-            {
-                if (!IsTypeExportable(typeArgument))
-                {
-                    return false;
-                }
-            }
-        }
-
-        if (namedTypeSymbol.DeclaredAccessibility is Accessibility.Public)
-        {
-            return true;
         }
 
         return false;
