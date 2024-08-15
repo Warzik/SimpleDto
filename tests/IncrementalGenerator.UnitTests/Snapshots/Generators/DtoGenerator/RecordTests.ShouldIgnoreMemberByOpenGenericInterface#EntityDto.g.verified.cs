@@ -4,9 +4,9 @@
 
 namespace Application.Dtos
 {
-	public sealed partial record EntityDto(
-		int Id,
-		string? Title,
-		int[]? ArrayOfInts
-	);
+    public sealed partial record EntityDto(
+        int Id,
+        string? Title,
+        int[]? ArrayOfInts
+    );
 }

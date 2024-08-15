@@ -4,9 +4,9 @@
 
 namespace Application.Dtos
 {
-	public sealed partial class EntityDto
-	{
-		public System.Guid Id {get; set;}
-		public string? Description {get; set;}
-	}
+    public sealed partial class EntityDto
+    {
+        public System.Guid Id {get; set;}
+        public string? Description {get; set;}
+    }
 }

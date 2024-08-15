@@ -4,10 +4,10 @@
 
 namespace Application.Dtos
 {
-	public sealed partial record EntityDto(
-		int Id,
-		string? Title,
-		string? Description,
-		System.Collections.Generic.ICollection<string>? Items
-	);
+    public sealed partial record EntityDto(
+        int Id,
+        string? Title,
+        string? Description,
+        System.Collections.Generic.ICollection<string>? Items
+    );
 }

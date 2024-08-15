@@ -6,13 +6,6 @@ namespace SimpleDto.Generator.Templates.Abstractions;
 
 internal abstract class BaseDtoTemplate : BaseTemplate
 {
-    public BaseDtoTemplate()
-    {
-        TemplatesDir = $"{base.TemplatesDir}.Dtos";
-    }
-
-    protected override string TemplatesDir { get; }
-
     protected static string GetNamespaceFrom(SyntaxNode node) => node.Parent switch
     {
         NamespaceDeclarationSyntax namespaceDeclarationSyntax => namespaceDeclarationSyntax.Name.ToString(),

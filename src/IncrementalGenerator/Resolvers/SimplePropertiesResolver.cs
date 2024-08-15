@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using Scriban.Parsing;
 using SimpleDto.Generator.Common;
 using SimpleDto.Generator.Extensions;
 using SimpleDto.Generator.Members;

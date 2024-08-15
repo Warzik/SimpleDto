@@ -4,11 +4,11 @@
 
 namespace Application.Dtos
 {
-	public sealed partial class EntityDto
-	{
-		public int Id {get; set;}
-		public string? Title {get; set;}
-		public string? Description {get; set;}
-		public System.Collections.Generic.ICollection<string>? Items {get; set;}
-	}
+    public sealed partial class EntityDto
+    {
+        public int Id {get; set;}
+        public string? Title {get; set;}
+        public string? Description {get; set;}
+        public System.Collections.Generic.ICollection<string>? Items {get; set;}
+    }
 }

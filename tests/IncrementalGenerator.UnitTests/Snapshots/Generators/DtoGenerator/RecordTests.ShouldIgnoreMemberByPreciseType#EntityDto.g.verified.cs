@@ -4,7 +4,7 @@
 
 namespace Application.Dtos
 {
-	public sealed partial record EntityDto(
-		int Id
-	);
+    public sealed partial record EntityDto(
+        int Id
+    );
 }

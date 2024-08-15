@@ -4,8 +4,8 @@
 
 namespace Application.Dtos
 {
-	public sealed partial record EntityDto(
-		System.Guid Id,
-		string? Description
-	);
+    public sealed partial record EntityDto(
+        System.Guid Id,
+        string? Description
+    );
 }

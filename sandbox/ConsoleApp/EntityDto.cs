@@ -1,13 +1,12 @@
-﻿using SimpleDto.Generator.Attributes;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using SimpleDto.Generator.Attributes;
 
 namespace ConsoleApp;
 
 [DtoFrom(typeof(Entity))]
 [DtoMemberIgnore(typeof(IEnumerable<>))]
-[DtoMemberIgnore(typeof(CustomEnum?))]
-[DtoMemberIgnore(typeof(BaseEntity))]
 [DtoMemberIgnore(nameof(Entity.Description))]
+[DtoMemberIgnore(typeof(BaseEntity))]
 public sealed partial class EntityDto
 {
 }

@@ -19,10 +19,8 @@ internal sealed class AttributesGenerator : IIncrementalGenerator
     {
         foreach (var attribute in AllAttributes)
         {
-            var code = ScribanRenderer.Render(attribute);
-
             context.RegisterPostInitializationOutput(ctx =>
-                ctx.AddSource($"{attribute.AttributeName}.g.cs", SourceText.From(code, Encoding.UTF8)));
+                ctx.AddSource($"{attribute.AttributeName}.g.cs", attribute.Render()));
         }
     }
 }

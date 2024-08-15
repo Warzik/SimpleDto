@@ -45,9 +45,7 @@ public class DtoGenerator : IIncrementalGenerator
         foreach (var dtoClass in parser.GetDtoTypes(distinctTypes))
         {
             var template = new DtoTemplate(dtoClass, propertiesResolver);
-            var source = SourceText.From(ScribanRenderer.Render(template), Encoding.UTF8);
-
-            context.AddSource($"{dtoClass.DtoSyntax.Identifier}.g.cs", source);
+            context.AddSource($"{dtoClass.DtoSyntax.Identifier}.g.cs", template.Render());
         }
     }
 }
